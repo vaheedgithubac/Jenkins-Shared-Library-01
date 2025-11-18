@@ -20,7 +20,7 @@ def call(Map config = [:]) {
         sh """
             ${scannerHome}/bin/sonar-scanner \
             -Dsonar.projectName='${projectName}' \
-            -Dsonar.projectKey='${projectKey}' 
+            -Dsonar.projectKey='${projectKey}' -X
         """
     }
 }
