@@ -1,0 +1,116 @@
+@Library('Jenkins-Shared-Library-01') _
+
+pipeline {
+ agent any
+
+ tools {
+   maven 'maven363'
+   jdk 'jdk-11'
+ }
+
+ environment {
+    MY_GIT_URL                = "https://github.com/project-1.git"
+    MY_GIT_BRANCH             = "main" 
+    MY_GIT_CREDENTIALS_ID     = ""
+    MY_GIT_LATEST_COMMIT_ID   = getShortCommit()  // <-- calls call() from shared library
+
+    PROJECT_NAME              = "myapp"
+    PROJECT_KEY               = "myapp"
+    COMPONENT                 = ""
+
+    SONARQUBEAPI              = "sonarqube-server"
+    SCANNER_HOME              = tool 'sonarscanner'
+
+    DOCKER_HUB_CREDENTIALS_ID = "docker-prod-creds"
+
+    JACOCO_GROUPID            = "org.jacoco"
+    JACOCO_ARTIFACT_ID        = "jacoco-maven-plugin"
+    JACOCO_VERSION            = "0.8.7"
+    JACOCO_GOAL               = "prepare-agent"
+    
+    TRIVY_IMAGE_REPORT_FORMAT       = "html"
+    TRIVY_FILE_SYSTEM_REPORT_FORMAT = "html"
+
+ }
+
+stages {
+
+  stage("GIT CHECKOUT") {
+    steps {
+        git_checkout(
+          gitUrl: env.MY_GIT_URL,
+          gitBranch: env.MY_GIT_BRANCH,
+          gitCredentialsId: env.MY_GIT_CREDENTIALS_ID
+        )
+    }
+  }
+
+  stage("JACOCO CODE COVERAGE") {
+    steps {
+        jacoco_code_coverage(
+          jacoco_groupId: env.JACOCO_GROUPID,
+          jacoco_artifactId: env.JACOCO_ARTIFACT_ID,
+          jacoco_version: env.JACOCO_VERSION,
+          jacoco_goal: env.JACOCO_GOAL
+        )
+    }
+  }
+  
+  stage("SONAR SCAN - SAST") {
+    steps {
+        sonar_scan(
+          sonarQubeAPI: env.SONARQUBEAPI,
+          scannerHome: env.SCANNER_HOME,
+          projectName: env.PROJECT_NAME,
+          projectKey: env.PROJECT_KEY
+        )
+    }
+  }
+
+  stage("SONARQUBE QUALITY GATE") {
+    steps {
+        sonarQube_qualityGate(timeoutMinutes: 5)
+    }
+  }
+
+  stage("TRIVY - FILE SYSTEM SCAN") {
+    steps {
+      script {
+        trivy_scan(
+          mode: "fs",
+          target: ".",  // current directory
+          output_report_format: env.TRIVY_FILE_SYSTEM_REPORT_FORMAT)
+        
+        //sh "trivy image --scanners vuln --offline-scan adamtravis/democicd:latest > trivyresults.txt"
+      }
+    }
+  }
+
+  stage("MAVEN BUILD") {
+    steps {
+        maven_build(skipTests: true)
+    }
+  }
+
+  stage("BUILD AND PUSH DOCKER IMAGE TO DOCKER HUB") {
+    steps {
+        build_push_docker_image_dockerHub(
+          projectName: env.PROJECT_NAME,
+          component: env.COMPONENT,
+          imageTag: env.MY_GIT_LATEST_COMMIT_ID,
+          credentialsId: env.DOCKER_HUB_CREDENTIALS_ID
+        )
+      }
+    }
+  
+  stage("TRIVY - DOCKER IMAGE SCAN") {
+    steps {
+        trivy_scan(
+          mode: "image",
+          target: "${env.PROJECT_NAME}-${env.COMPONENT}:${env.MY_GIT_LATEST_COMMIT_ID}",
+          output_report_format: env.TRIVY_IMAGE_REPORT_FORMAT)
+        
+        //sh "trivy image --scanners vuln --offline-scan adamtravis/democicd:latest > trivyresults.txt"
+      }
+    }
+}
