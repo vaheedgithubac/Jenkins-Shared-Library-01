@@ -1,41 +1,41 @@
 @Library('Jenkins-Shared-Library-01') _
 
 pipeline {
- agent any
+  agent any
  
- options { 
+  options { 
            skipDefaultCheckout true 
            timestamps() 
     }
  
- tools {
+  tools {
         maven 'maven363'       // Maven configured in Jenkins Global Tool Configuration
         jdk 'jdk-11'           // JDK configured in Jenkins Global Tool Configuration
         sonar 'sonarscanner'   // SonarScanner configured in Jenkins Global Tool Configuration
     }
 
- environment {
-    MY_GIT_URL                = "https://github.com/project-1.git"
-    MY_GIT_BRANCH             = "main" 
-    MY_GIT_CREDENTIALS_ID     = ""
-    MY_GIT_LATEST_COMMIT_ID   = getShortCommit()  // <-- calls call() from shared library
+  environment {
+     MY_GIT_URL                = "https://github.com/project-1.git"
+     MY_GIT_BRANCH             = "main" 
+     MY_GIT_CREDENTIALS_ID     = ""
+     MY_GIT_LATEST_COMMIT_ID   = getShortCommit()  // <-- calls call() from shared library
 
-    PROJECT_NAME              = "myapp"
-    PROJECT_KEY               = "myapp"
-    COMPONENT                 = ""
+     PROJECT_NAME              = "myapp"
+     PROJECT_KEY               = "myapp"
+     COMPONENT                 = ""
 
-    SONARQUBEAPI              = "sonarqube-server"
-    SCANNER_HOME              = "${tool 'sonarscanner'}"
+     SONARQUBEAPI              = "sonarqube-server"
+     SCANNER_HOME              = "${tool 'sonarscanner'}"
 
-    DOCKER_HUB_CREDENTIALS_ID = "docker-prod-creds"
+     DOCKER_HUB_CREDENTIALS_ID = "docker-prod-creds"
 
-    JACOCO_GROUPID            = "org.jacoco"
-    JACOCO_ARTIFACT_ID        = "jacoco-maven-plugin"
-    JACOCO_VERSION            = "0.8.7"
-    JACOCO_GOAL               = "prepare-agent"
+     JACOCO_GROUPID            = "org.jacoco"
+     JACOCO_ARTIFACT_ID        = "jacoco-maven-plugin"
+     JACOCO_VERSION            = "0.8.7"
+     JACOCO_GOAL               = "prepare-agent"
     
-    TRIVY_IMAGE_REPORT_FORMAT       = "html"
-    TRIVY_FILE_SYSTEM_REPORT_FORMAT = "html"
+     TRIVY_IMAGE_REPORT_FORMAT       = "html"
+     TRIVY_FILE_SYSTEM_REPORT_FORMAT = "html"
 
  }
 
