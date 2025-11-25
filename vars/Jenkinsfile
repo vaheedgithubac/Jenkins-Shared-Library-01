@@ -31,7 +31,7 @@ pipeline {
      SCANNER_HOME              = "${tool 'sonarscanner'}"
 
      DOCKER_HUB_CREDENTIALS_ID = "docker-prod-creds"
-     MAVEN_SKIP_TESTS          = true
+     MAVEN_SKIP_TESTS          = "true"
 
      JACOCO_GROUPID            = "org.jacoco"
      JACOCO_ARTIFACT_ID        = "jacoco-maven-plugin"
