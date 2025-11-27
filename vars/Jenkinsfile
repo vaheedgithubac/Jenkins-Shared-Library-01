@@ -54,7 +54,18 @@ stages {
         )
     }
   }
-
+  /*
+  stage("GIT CHECKOUT") {
+    steps {
+        def gitParams = [
+            gitUrl:           env.MY_GIT_URL,
+            gitBranch:        env.MY_GIT_BRANCH,
+            gitCredentialsId: env.MY_GIT_CREDENTIALS_ID
+        ]
+        git_checkout(gitParams)
+    }
+  }
+  */
   stage("JACOCO CODE COVERAGE") {
     steps {
         jacoco_code_coverage(
