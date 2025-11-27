@@ -1,8 +1,16 @@
-def call(Map config = [:]){
+def call(Map config = [:]) {
+    // Normalize skipTests
+    def skipTests = (config.skipTests in [true, 'true']) ? 'true' : 'false'
+    def goals = config.goals ?: 'clean package'
 
-  // Validate required parameters
-  // def skipTests = config.skipTests ?: 'false'
-  def skipTests = (config.skipTests in [true, 'true']) ? 'true' : 'false'
+    // Correct: steps.echo and steps.sh
+    steps.echo "Running Maven: ${goals} -DskipTests=${skipTests}"
 
-  sh "mvn clean package -DskipTests=${skipTests}"
+    try {
+        steps.sh "mvn ${goals} -DskipTests=${skipTests}"
+    } catch (Exception ex) {
+        steps.echo "Maven build failed: ${ex.message}"
+        error "Build failed"
+    }
 }
+
