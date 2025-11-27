@@ -102,14 +102,14 @@ pipeline {
             projectName:  env.PROJECT_NAME,
             projectKey:   env.PROJECT_KEY
           ]
-          sonar_scan(sonar_params)
+          sonarqube_scan(sonar_params)
         }
       }
     }
 
     stage("SONARQUBE QUALITY GATE") {
       steps {
-        sonarQube_qualityGate(timeoutMinutes: 5)
+        sonarqube_qualityGate(timeoutMinutes: 5)
       }
     }
 
