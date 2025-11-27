@@ -136,4 +136,5 @@ stages {
         //sh "trivy image --scanners vuln --offline-scan adamtravis/democicd:latest > trivyresults.txt"
       }
     }
+  }
 }
