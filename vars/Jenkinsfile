@@ -9,55 +9,66 @@ pipeline {
            timeout(time: 30, unit: 'MINUTES')
            timestamps() 
            ansiColor('xterm')   // plugin: "AnsiColor"
-    }
+  }
  
   tools {
         maven 'maven363'       // Maven configured in Jenkins Global Tool Configuration
         jdk 'jdk-11'           // JDK configured in Jenkins Global Tool Configuration
         sonar 'sonarscanner'   // SonarScanner configured in Jenkins Global Tool Configuration
-    }
+  }
 
   environment {
+                      // Git Variables //
      MY_GIT_URL                = "https://github.com/project-1.git"
      MY_GIT_BRANCH             = "main" 
      MY_GIT_CREDENTIALS_ID     = ""
      MY_GIT_LATEST_COMMIT_ID   = getShortCommit()  // <-- calls call() from shared library
 
+                      // Project Variables //
      PROJECT_NAME              = "myapp"
      PROJECT_KEY               = "myapp"
      COMPONENT                 = ""
 
+                      // Sonarqube Variables //
      SONARQUBEAPI              = "sonarqube-server"
      SCANNER_HOME              = "${tool 'sonarscanner'}"
-
+     
+                      // Docker and Maven Variables //
      DOCKER_HUB_CREDENTIALS_ID = "docker-prod-creds"
      MAVEN_SKIP_TESTS          = "true"
 
+                      // Jacoco Variables //
      JACOCO_GROUPID            = "org.jacoco"
      JACOCO_ARTIFACT_ID        = "jacoco-maven-plugin"
      JACOCO_VERSION            = "0.8.7"
      JACOCO_GOAL               = "prepare-agent"
     
+                      // Trivy Variables //   
      TRIVY_IMAGE_REPORT_FORMAT       = "html"
      TRIVY_FILE_SYSTEM_REPORT_FORMAT = "html"
 
- }
+                      // Nexus Variables //
+     NEXUS_HOST            = '13.235.95.123'
+     NEXUS_PORT            = '8081'
+     NEXUS_PROTOCOL        = 'http'
+     NEXUS_VERSION         = 'nexus3'
 
-stages {
+     NEXUS_BASE_REPO       = 'vprofile'
+     NEXUS_SNAP_REPO       = "${NEXUS_BASE_REPO}-SNAPSHOT"
+     NEXUS_RELEASE_REPO    = "${NEXUS_BASE_REPO}-RELEASE"
+     NEXUS_GRP_REPO        = "${NEXUS_BASE_REPO}-maven-group"
 
-  stage("GIT CHECKOUT") {
-    steps {
-        git_checkout(
-          gitUrl:           env.MY_GIT_URL,
-          gitBranch:        env.MY_GIT_BRANCH,
-          gitCredentialsId: env.MY_GIT_CREDENTIALS_ID
-        )
-    }
+     NEXUS_GRP_ID          = 'QA'
+     NEXUS_CREDENTIALS_ID  = 'nexus-creds'
+     NEXUS_CREDENTIALS     = credentials('nexus-creds')      
+     NEXUS_ARTIFACT_VERSION = "${BUILD_ID}-${BUILD_TIMESTAMP}"      // Requires "Build Timestamp" plugin
   }
-  /*
-  stage("GIT CHECKOUT") {
-    steps {
-      script {
+
+  stages {
+
+    stage("GIT CHECKOUT") {
+      steps {
+        script {
           def gitParams = [
               gitUrl:           env.MY_GIT_URL,
               gitBranch:        env.MY_GIT_BRANCH,
@@ -66,74 +77,104 @@ stages {
           git_checkout(gitParams)
       }
     }
-  }
-  */
-  stage("JACOCO CODE COVERAGE") {
-    steps {
-        jacoco_code_coverage(
-          jacoco_groupId:    env.JACOCO_GROUPID,
-          jacoco_artifactId: env.JACOCO_ARTIFACT_ID,
-          jacoco_version:    env.JACOCO_VERSION,
-          jacoco_goal:       env.JACOCO_GOAL
-        )
     }
-  }
   
-  stage("SONAR SCAN - SAST") {
-    steps {
-        sonar_scan(
-          sonarQubeAPI: env.SONARQUBEAPI,
-          scannerHome:  env.SCANNER_HOME,
-          projectName:  env.PROJECT_NAME,
-          projectKey:   env.PROJECT_KEY
-        )
+    stage("JACOCO CODE COVERAGE") {
+      steps {
+        script {
+          def jacoco_params = [
+            jacoco_groupId:    env.JACOCO_GROUPID,
+            jacoco_artifactId: env.JACOCO_ARTIFACT_ID,
+            jacoco_version:    env.JACOCO_VERSION,
+            jacoco_goal:       env.JACOCO_GOAL
+        ]
+        jacoco_code_coverage(jacoco_params)
+      }
     }
-  }
+    }
+  
+    stage("SONAR SCAN - SAST") {
+      steps {
+        script {
+          sonar_params = [
+            sonarQubeAPI: env.SONARQUBEAPI,
+            scannerHome:  env.SCANNER_HOME,
+            projectName:  env.PROJECT_NAME,
+            projectKey:   env.PROJECT_KEY
+          ]
+          sonar_scan(sonar_params)
+      }
+    }
+    }
 
-  stage("SONARQUBE QUALITY GATE") {
-    steps {
+    stage("SONARQUBE QUALITY GATE") {
+      steps {
         sonarQube_qualityGate(timeoutMinutes: 5)
-    }
-  }
-
-  stage("TRIVY - FILE SYSTEM SCAN") {
-    steps {
-      script {
-        trivy_scan(
-          mode: "fs",
-          target: ".",  // current directory
-          output_report_format: env.TRIVY_FILE_SYSTEM_REPORT_FORMAT)
-        
-        //sh "trivy image --scanners vuln --offline-scan adamtravis/democicd:latest > trivyresults.txt"
       }
     }
-  }
 
-  stage("MAVEN BUILD") {
-    steps {
-        maven_build(skipTests: env.MAVEN_SKIP_TESTS)
+    stage("TRIVY - FILE SYSTEM SCAN") {
+      steps {
+        script {
+          def trivy_file_params = [
+            mode: "fs",
+            target: ".",  // current directory
+            output_report_format: env.TRIVY_FILE_SYSTEM_REPORT_FORMAT
+          ]
+          trivy_scan(trivy_file_params)
+          //sh "trivy image --scanners vuln --offline-scan adamtravis/democicd:latest > trivyresults.txt"
+        }
+      }
     }
-  }
 
-  stage("BUILD AND PUSH DOCKER IMAGE TO DOCKER HUB") {
-    steps {
-        build_push_docker_image_dockerHub(
-          projectName:   env.PROJECT_NAME,
-          component:     env.COMPONENT,
-          imageTag:      env.MY_GIT_LATEST_COMMIT_ID,
-          credentialsId: env.DOCKER_HUB_CREDENTIALS_ID
-        )
+    stage("MAVEN BUILD") {
+      steps {
+        maven_build(skipTests: env.MAVEN_SKIP_TESTS)
+      }
+    }
+
+    stage("BUILD AND PUSH DOCKER IMAGE TO DOCKER HUB") {
+      steps {
+        script {
+          def docker_params = [
+            projectName:   env.PROJECT_NAME,
+            component:     env.COMPONENT,
+            imageTag:      env.MY_GIT_LATEST_COMMIT_ID,
+            credentialsId: env.DOCKER_HUB_CREDENTIALS_ID
+          ]
+          build_push_docker_image_dockerHub(docker_params)
+        }
+      }
+    }
+
+    stage("NEXUS ARTIFACT UPLOAD") {
+      steps {
+        script {
+          def nexusParams = [
+            nexus_version:          env.NEXUS_VERSION,
+            nexus_protocol:         env.NEXUS_PROTOCOL,
+            nexus_host:             env.NEXUS_HOST,
+            nexus_port:             env.NEXUS_PORT,
+            nexus_grp_id:           env.NEXUS_GRP_ID,
+            nexus_artifact_version: env.NEXUS_ARTIFACT_VERSION,
+            nexus_credentials_id:   env.NEXUS_CREDENTIALS_ID
+          ]
+          nexus_upload(nexusParams)
+        }
       }
     }
   
-  stage("TRIVY - DOCKER IMAGE SCAN") {
-    steps {
-        trivy_scan(
-          mode: "image",
-          target: "${env.PROJECT_NAME}-${env.COMPONENT}:${env.MY_GIT_LATEST_COMMIT_ID}",
-          output_report_format: env.TRIVY_IMAGE_REPORT_FORMAT)
-        
-        //sh "trivy image --scanners vuln --offline-scan adamtravis/democicd:latest > trivyresults.txt"
+    stage("TRIVY - DOCKER IMAGE SCAN") {
+      steps {
+        script {
+          def trivy_image_params = [
+            mode: "image",
+            target: "${env.PROJECT_NAME}-${env.COMPONENT}:${env.MY_GIT_LATEST_COMMIT_ID}",
+            output_report_format: env.TRIVY_IMAGE_REPORT_FORMAT
+          ]
+          trivy_scan(trivy_image_params)
+        }
+      //sh "trivy image --scanners vuln --offline-scan adamtravis/democicd:latest > trivyresults.txt"
       }
     }
   }
