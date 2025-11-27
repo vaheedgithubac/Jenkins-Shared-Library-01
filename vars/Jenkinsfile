@@ -169,7 +169,10 @@ pipeline {
       steps {
         script {
           def trivy_image_params = [
+            project_name: env.PROJECT_NAME,
+            component: env.COMPONENT,
             mode: "image",
+            git_latest_commit_id: env.MY_GIT_LATEST_COMMIT_ID,
             target: "${env.PROJECT_NAME}-${env.COMPONENT}:${env.MY_GIT_LATEST_COMMIT_ID}",
             output_report_format: env.TRIVY_IMAGE_REPORT_FORMAT
           ]
