@@ -103,8 +103,8 @@ pipeline {
             projectKey:   env.PROJECT_KEY
           ]
           sonar_scan(sonar_params)
+        }
       }
-    }
     }
 
     stage("SONARQUBE QUALITY GATE") {
