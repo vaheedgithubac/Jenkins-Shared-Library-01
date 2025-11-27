@@ -37,15 +37,18 @@ def call(Map config = [:]) {
     ][format] ?: format  // fallback to format if unknown
     
     def output_report = ""
+    def outDir = "trivy-reports"
+    steps.sh "mkdir -p ${outDir}"
+
     if(mode.toLowerCase() == "fs" ){
-        output_report = "${project_name}-${component}-${mode}-${git_latest_commit_id}.${ext}"   // expense-backend-fs-7drt46y.html
+        output_report = "${outDir}/${project_name}-${component}-${mode}-${git_latest_commit_id}.${ext}"   // trivy-reports/expense-backend-fs-7drt46y.html
     }
     else if (mode.toLowerCase() == "image"){
         //def safeTarget = target.replaceAll(/[:\/]/, "-")  // replaces ":"" or "/"" with "-"
-        output_report = "${project_name}-${component}-${mode}-${git_latest_commit_id}.${ext}"   // expense-backend-image-7drt46y.html
+        output_report = "${outDir}/${project_name}-${component}-${mode}-${git_latest_commit_id}.${ext}"   // trivy-reports/expense-backend-image-7drt46y.html
     }
     else {
-        steps.echo "Please provide mode: fs or image"
+        error "❌ Invalid mode: Choose 'fs' or 'image'"
     }
 
     // -------------------------
