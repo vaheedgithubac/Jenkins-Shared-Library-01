@@ -32,7 +32,7 @@ def call(Map config = [:]) {
     echo "Running Jacoco step: ${groupId}:${artifactId}:${version}:${goal}"
     
     try { sh "mvn ${jacoco_groupId}:${jacoco_artifactId}:${jacoco_version}:${jacoco_goal}" }
-    catch (Exception ex) { error "Jacoco Maven step failed: ${ex.message}" }
+    catch (Exception ex) { ❌ error "Jacoco Maven step failed: ${ex.message}" }
 
     // sh 'mvn org.jacoco:jacoco-maven-plugin:0.8.7:prepare-agent'
 }
