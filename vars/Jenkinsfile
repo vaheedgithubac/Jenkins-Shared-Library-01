@@ -75,8 +75,8 @@ pipeline {
               gitCredentialsId: env.MY_GIT_CREDENTIALS_ID
           ]
           git_checkout(gitParams)
+        }
       }
-    }
     }
   
     stage("JACOCO CODE COVERAGE") {
@@ -89,8 +89,8 @@ pipeline {
             jacoco_goal:       env.JACOCO_GOAL
         ]
         jacoco_code_coverage(jacoco_params)
+        }
       }
-    }
     }
   
     stage("SONAR SCAN - SAST") {
