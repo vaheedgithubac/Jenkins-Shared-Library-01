@@ -1,14 +1,61 @@
 def call(Map config = [:]) {
 
-	// Validate required parameters
-	if (!config.mode) { error "Parameter 'mode' is required ('fs' or 'image')" }
-	else { mode = config.mode }
+    // --------------------------------
+    // 1️⃣ Validate required parameters
+    // --------------------------------
+    def required = [
+        "project_name",
+        "component",
+        "mode",
+        "output_report_format",
+        "target"
+    ]
 
-	if (!config.output_report_format) { error "Parameter 'format' is required" }
-	else { format = config.output_report_format }
+    required.each { key ->
+        if (!config[key]) {
+            error "❌ Trivy: Missing required parameter '${key}'"
+        }
+    }
 
-	if (!config.target) { error "Parameter 'target' is required (filesystem path or image name)" }
-	else { target = config.target }
+    def project_name = config.project_name
+    def component    = config.component
+    def mode         = config.mode
+    def format       = config.output_report_format
+    def target       = config.target
 
-	sh "trivy ${mode} --format ${format} --output ${mode}-results.${format} --severity MEDIUM,HIGH,CRITICAL ${target}"
+    // -----------------------------------
+    // 2️⃣ Determine proper file extension
+    // -----------------------------------
+    def ext = [
+        "table": "txt",
+        "json" : "json",
+        "sarif": "sarif",
+        "yaml" : "yaml"
+    ][format] ?: format  // fallback to format if unknown
+
+    def output_report = "${project_name}-${component}-${mode}.${ext}"
+
+    // -------------------------
+    // 3️⃣ Log info
+    // -------------------------
+    steps.echo "🛡 Running Trivy scan"
+    steps.echo "📄 Output: ${output_report}"
+    steps.echo "🎯 Target: ${target}"
+
+    // ----------------------------------------------------
+    // 4️⃣ Run Trivy safely (handle any special characters)
+    // ----------------------------------------------------
+    steps.sh(
+        script: [
+            "trivy",
+            mode,
+            "--format", format,
+            "--output", output_report,
+            "--severity", "MEDIUM,HIGH,CRITICAL",
+            target
+        ],
+        returnStdout: false
+    )
+
+    steps.echo "✅ Trivy scan completed successfully."
 }
