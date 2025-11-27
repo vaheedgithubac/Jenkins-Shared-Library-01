@@ -62,6 +62,13 @@ pipeline {
      NEXUS_CREDENTIALS_ID  = 'nexus-creds'
      NEXUS_CREDENTIALS     = credentials('nexus-creds')      
      NEXUS_ARTIFACT_VERSION = "${BUILD_ID}-${BUILD_TIMESTAMP}"      // Requires "Build Timestamp" plugin
+
+                      // Email Variables //
+     FROM_MAIL     = ""
+     TO_MAIL       = ""
+     REPLY_TO_MAIL = ""
+     CC_MAIL       = ""
+     BCC_MAIL      = ""
   }
 
   stages {
@@ -181,5 +188,26 @@ pipeline {
       //sh "trivy image --scanners vuln --offline-scan adamtravis/democicd:latest > trivyresults.txt"
       }
     }
+  }
+  post {
+     always {
+       script {
+           def emailParams = [
+                 jobName:        env.JOB_NAME,
+                 buildNumber:    env.BUILD_NUMBER,
+                 pipelineStatus: currentBuild.currentResult,
+                 buildURL:       env.BUILD_URL,
+                 from_mail:      env.FROM_MAIL,
+                 to_mail:        env.TO_MAIL,
+                 reply_to_mail:  env.REPLY_TO_MAIL,
+                 cc_mail:        env.CC_MAIL,
+                 bcc_mail:       env.BCC_MAIL,
+                 attachments:    "trivy-reports/*",                // "trivy-reports/*, owasp-reports/*"
+                 branchName:     env.BRANCH_NAME,
+                 duration:       currentBuild.durationString
+           ]
+           send_email(emailParams)
+       }
+     }
   }
 }
