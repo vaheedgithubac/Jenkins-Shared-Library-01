@@ -20,7 +20,7 @@ def call(Map config = [:]) {
 
     required.each { key ->
         if (!config[key]) {
-            error "Jacoco: Missing required parameter '${key}'"
+            error "❌ Jacoco: Missing required parameter '${key}'"
         }
     }
 
