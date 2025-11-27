@@ -157,7 +157,8 @@ pipeline {
             nexus_port:             env.NEXUS_PORT,
             nexus_grp_id:           env.NEXUS_GRP_ID,
             nexus_artifact_version: env.NEXUS_ARTIFACT_VERSION,
-            nexus_credentials_id:   env.NEXUS_CREDENTIALS_ID
+            nexus_credentials_id:   env.NEXUS_CREDENTIALS_ID,
+            nexus_base_repo:        env.NEXUS_BASE_REPO
           ]
           nexus_upload(nexusParams)
         }
