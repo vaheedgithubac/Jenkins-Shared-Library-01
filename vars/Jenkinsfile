@@ -125,11 +125,14 @@ pipeline {
       steps {
         script {
           def trivy_file_params = [
-            mode: "fs",
-            target: ".",  // current directory
-            output_report_format: env.TRIVY_FILE_SYSTEM_REPORT_FORMAT
-          ]
-          trivy_scan(trivy_file_params)
+                mode:                 "fs",
+                target:               ".",  // current directory
+                output_report_format: env.TRIVY_FILE_SYSTEM_REPORT_FORMAT,
+                project_name:         env.PROJECT_NAME,
+                component:            env.COMPONENT,
+                git_latest_commit_id: env.MY_GIT_LATEST_COMMIT_ID
+           ]
+           trivy_scan(trivy_file_params)
           //sh "trivy image --scanners vuln --offline-scan adamtravis/democicd:latest > trivyresults.txt"
         }
       }
