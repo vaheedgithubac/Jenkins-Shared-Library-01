@@ -69,7 +69,7 @@ pipeline {
      REPLY_TO_MAIL = ""
      CC_MAIL       = ""
      BCC_MAIL      = ""
-     ATTACHMENTS   = "trivy-reports/*"      // "trivy-reports/*, owasp-reports/*"
+     ATTACHMENTS   = "trivy-reports/*"      // "trivy-reports/*, owasp-reports/*, surefire-reports/*.xml"
   }
 
   stages {
