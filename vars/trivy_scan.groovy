@@ -54,8 +54,8 @@ def call(Map config = [:]) {
     // 3️⃣ Log info
     // -------------------------
     steps.echo "🛡 Running Trivy scan"
-    steps.echo "📄 Output: ${output_report}"
-    steps.echo "🎯 Target: ${target}"
+    steps.echo "📄 Output: '${output_report}'"
+    steps.echo "🎯 Target: '${target}'"
 
     // ----------------------------------------------------
     // 4️⃣ Run Trivy safely (handle any special characters)
