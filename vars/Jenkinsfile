@@ -69,6 +69,7 @@ pipeline {
      REPLY_TO_MAIL = ""
      CC_MAIL       = ""
      BCC_MAIL      = ""
+     ATTACHMENTS   = "trivy-reports/*"      // "trivy-reports/*, owasp-reports/*"
   }
 
   stages {
@@ -202,7 +203,7 @@ pipeline {
                  reply_to_mail:  env.REPLY_TO_MAIL,
                  cc_mail:        env.CC_MAIL,
                  bcc_mail:       env.BCC_MAIL,
-                 attachments:    "trivy-reports/*",                // "trivy-reports/*, owasp-reports/*"
+                 attachments:    env.ATTACHMENTS,                // "trivy-reports/*, owasp-reports/*"
                  branchName:     env.BRANCH_NAME,
                  duration:       currentBuild.durationString
            ]
