@@ -14,5 +14,6 @@ def call(Map config = [:]) {
         credentialsId: gitCredentialsId
     )
     
-    echo "Checked out ${gitBranch} from ${gitUrl} Successfully..."
+    // echo "Checked out Branch:'${gitBranch}' from ${gitUrl} Successfully..."
+    steps.echo echo "Checked out Branch:'${gitBranch}' from ${gitUrl} Successfully..."
 }
