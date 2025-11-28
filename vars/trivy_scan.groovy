@@ -61,6 +61,7 @@ def call(Map config = [:]) {
     // ----------------------------------------------------
     // 4️⃣ Run Trivy safely (handle any special characters)
     // ----------------------------------------------------
+    /*
     steps.sh(
         script: [
             "trivy",
@@ -71,7 +72,15 @@ def call(Map config = [:]) {
             target
         ],
         returnStdout: false
-    )
+    ) */
+    steps.sh """
+            trivy fs \
+            --format ${format} \
+            --output ${output_report} \
+            --severity MEDIUM,HIGH,CRITICAL \
+            .
+    """
+
 
     steps.echo "✅ Trivy scan completed successfully."
 }
