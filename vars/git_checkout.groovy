@@ -15,5 +15,5 @@ def call(Map config = [:]) {
     )
     
     // echo "Checked out Branch:'${gitBranch}' from ${gitUrl} Successfully..."
-    steps.echo echo "Checked out Branch:'${gitBranch}' from ${gitUrl} Successfully..."
+    steps.echo "Checked out Branch:'${gitBranch}' from ${gitUrl} Successfully..."
 }
