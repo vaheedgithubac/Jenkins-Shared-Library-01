@@ -37,7 +37,7 @@ def call(Map config = [:]) {
     
     def output_report = ""
     def outDir = "trivy-reports"
-    steps.sh "mkdir -p ${outDir}"
+    sh "mkdir -p ${outDir}"
 
     if(mode.toLowerCase() == "fs" ){
         output_report = "${outDir}/${project_name}-${component}-${mode}-${git_latest_commit_id}.${ext}"   // trivy-reports/expense-backend-fs-7drt46y.html
@@ -53,33 +53,21 @@ def call(Map config = [:]) {
     // -------------------------
     // 3️⃣ Log info
     // -------------------------
-    steps.echo "🛡 Running Trivy scan"
-    steps.echo "📄 Output: '${output_report}'"
-    steps.echo "🎯 Target: '${target}'"
+    echo "🛡 Running Trivy scan"
+    echo "📄 Output: '${output_report}'"
+    echo "🎯 Target: '${target}'"
 
     // ----------------------------------------------------
     // 4️⃣ Run Trivy safely (handle any special characters)
     // ----------------------------------------------------
-    /*
-    steps.sh(
-        script: [
-            "trivy",
-            mode,
-            "--format", format,
-            "--output", output_report,
-            "--severity", "MEDIUM,HIGH,CRITICAL",
-            target
-        ],
-        returnStdout: false
-    ) */
-    steps.sh """
+    sh """
             trivy fs \
             --format ${format} \
             --output ${output_report} \
             --severity MEDIUM,HIGH,CRITICAL \
-            .
+            .   
     """
 
 
-    steps.echo "✅ Trivy scan completed successfully."
+    echo "✅ Trivy scan completed successfully."
 }
